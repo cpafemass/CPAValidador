@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Aplicativo.Resources.Scaffolding;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
+using System.Reflection;
 using ZXing.Net.Maui.Controls;
 namespace Aplicativo
 {
@@ -8,6 +11,17 @@ namespace Aplicativo
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+            //Adiciona o appsettings.json como recurso incorporado
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("Aplicativo.appsettings.json");
+            if (stream != null)
+            {
+                var config = new ConfigurationBuilder()
+                    .AddJsonStream(stream)
+                    .Build();
+                builder.Configuration.AddConfiguration(config);
+            }
+
             builder
                 .UseMauiApp<App>()
                 .UseBarcodeReader() // Serviço de leitura de código de barras
@@ -18,8 +32,9 @@ namespace Aplicativo
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();
+            builder.Services.AddDbContext<ApplicationContext>();
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
 

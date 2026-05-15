@@ -1,15 +1,19 @@
 ﻿@page "/"
 
 <div class="main-div">
-    <div class=main-title-div ">
+    <div class="main-title-div">
         <h1>Validador de CPA</h1>
     </div>
-    @if (!string.IsNullOrEmpty(qrCodeContent))
-    {
-        <div class="validated-content-div">
-            <MudText>Hash scaneado: @(IsTheHasValid ? "Valido" : "Invalido") </MudText>
-        </div> 
-    }
+    <MudPaper Class="validated-content-mudpaper" Elevation="0">
+        @if (!string.IsNullOrEmpty(qrCodeContent))
+        {
+            <div class="validated-content-div">
+                <MudText Align="Align.Center"> Hash scaneado: <span style="@(IsTheHashValid ? $"{Valid}" : $"{Invalid}")"> @(IsTheHashValid ? "Valido" : "Invalido")</span> </MudText>
+                <MudText Align="Align.Center">Conteúdo do QR Code:@qrCodeContent </MudText>
+            </div>
+        }
+    </MudPaper>
+
     <div class="validate-button-div">
         <MudButton 
             Class="validate-button"
@@ -18,7 +22,8 @@
             FullWidth="true"
             Variant="Variant.Filled" 
             Color="Color.Primary"
-            OnClick="@OpenScanner">
+            OnClick="@OpenScanner"
+            Disabled="@DisableButton">
             Validar
         </MudButton>
     </div>
@@ -30,8 +35,13 @@
 @code {
     private string qrCodeContent = string.Empty;
     //O QRCode vai contar uma lista de Hash, então esse tipo deverá virar uma List<string?>
-    private bool IsTheHasValid = false;
+    private bool IsTheHashValid = false;
     private bool HasTheHasBeenValidated = false;
+    private bool DisableButton = false;
+
+    private string Invalid = "color: red;font-weight: bold; font-size: x-large";
+    private string Valid = "color: green;font-weight: bold; font-size: x-large";
+
 
     private async Task OpenScanner()
     {
@@ -39,6 +49,7 @@
         var scanner = new Scanner();
 
         //await Application.Current.MainPage.Navigation.PushModalAsync(scanner);
+        DisableButton = true;
         await Application.Current.Windows[0].Navigation.PushModalAsync(scanner);
 
         scanner.Unloaded += (s, e) =>
@@ -51,7 +62,8 @@
 
 
             //Fazer um handler para separar os hashes do qrcode e jogar-los para o qrCodeContet
-            IsTheHasValid = true;
+            IsTheHashValid = Scanner.ValidateQRCode(qrCodeContent);
+            DisableButton = false;
             StateHasChanged();
         };
     }
