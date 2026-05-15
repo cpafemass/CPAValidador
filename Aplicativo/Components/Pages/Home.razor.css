@@ -1,0 +1,27 @@
+.main-div{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.main-div ::deep .validate-button-div{
+  
+    justify-self: !important center;
+    align-self: !important center;
+    margin-top: 50vh;
+    
+    
+
+}
+    .main-div ::deep .validate-button {
+        width: 50vw;
+        height: 10vh;
+    }
+    .main-div ::deep .main-title-div {
+        
+    }
+    .main-div ::deep .validated-content-div {
+    
+    }

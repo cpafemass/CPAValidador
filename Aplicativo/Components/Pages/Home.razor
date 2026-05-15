@@ -1,0 +1,58 @@
+﻿@page "/"
+
+<div class="main-div">
+    <div class=main-title-div ">
+        <h1>Validador de CPA</h1>
+    </div>
+    @if (!string.IsNullOrEmpty(qrCodeContent))
+    {
+        <div class="validated-content-div">
+            <MudText>Hash scaneado: @(IsTheHasValid ? "Valido" : "Invalido") </MudText>
+        </div> 
+    }
+    <div class="validate-button-div">
+        <MudButton 
+            Class="validate-button"
+            IconSize="Size.Large"
+            EndIcon="@Icons.Material.Filled.CameraAlt"
+            FullWidth="true"
+            Variant="Variant.Filled" 
+            Color="Color.Primary"
+            OnClick="@OpenScanner">
+            Validar
+        </MudButton>
+    </div>
+</div>
+
+
+
+
+@code {
+    private string qrCodeContent = string.Empty;
+    //O QRCode vai contar uma lista de Hash, então esse tipo deverá virar uma List<string?>
+    private bool IsTheHasValid = false;
+    private bool HasTheHasBeenValidated = false;
+
+    private async Task OpenScanner()
+    {
+        qrCodeContent = string.Empty;
+        var scanner = new Scanner();
+
+        //await Application.Current.MainPage.Navigation.PushModalAsync(scanner);
+        await Application.Current.Windows[0].Navigation.PushModalAsync(scanner);
+
+        scanner.Unloaded += (s, e) =>
+        {
+            qrCodeContent = scanner.Result;
+            // 1- O obter o resultado do QR Code
+            // 2- Validar os dados no back
+            // 3- Se retornar OK mostra como válido, se retornar UnAuthorized mostra como invalido
+
+
+
+            //Fazer um handler para separar os hashes do qrcode e jogar-los para o qrCodeContet
+            IsTheHasValid = true;
+            StateHasChanged();
+        };
+    }
+}
