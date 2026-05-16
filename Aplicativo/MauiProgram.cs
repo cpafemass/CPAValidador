@@ -1,4 +1,5 @@
 ﻿using Aplicativo.Resources.Scaffolding;
+using Aplicativo.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
@@ -33,6 +34,10 @@ namespace Aplicativo
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();
             builder.Services.AddDbContext<ApplicationContext>();
+            builder.Services.AddHttpClient<HttpService>(options =>
+            {
+                options.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]);
+            });
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();

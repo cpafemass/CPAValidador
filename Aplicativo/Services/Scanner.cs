@@ -39,7 +39,7 @@ namespace Aplicativo.Services
 
                     if (Navigation.ModalStack.Count > 0)
                     {
-                        await Navigation.PopModalAsync();
+                        await Navigation.();
                     }
 
                 });
