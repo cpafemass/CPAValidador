@@ -33,10 +33,10 @@ namespace Aplicativo
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();
-            builder.Services.AddDbContext<ApplicationContext>();
+            
             builder.Services.AddHttpClient<HttpService>(options =>
             {
-                options.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]);
+                options.BaseAddress = new Uri(builder.Configuration["Configs:BaseUrl"]!);
             });
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();

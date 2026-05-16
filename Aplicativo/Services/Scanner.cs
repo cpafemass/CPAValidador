@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Aplicativo.Resources.Scaffolding;
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ZXing.Net.Maui;
@@ -9,8 +11,22 @@ namespace Aplicativo.Services
     {
         public string Result { get; set; }
         private bool isProcessing = false;
+        private readonly HttpService _httpService;
         public Scanner()
         {
+            InitializeComponent();
+           
+            barcodeReader.Options = new BarcodeReaderOptions
+            {
+                Formats = BarcodeFormat.QrCode,
+                AutoRotate = true,
+                Multiple = false,
+
+            };
+        }
+        public Scanner(HttpService httpService)
+        {
+            _httpService = httpService;
             InitializeComponent();
 
             barcodeReader.Options = new BarcodeReaderOptions
@@ -39,7 +55,7 @@ namespace Aplicativo.Services
 
                     if (Navigation.ModalStack.Count > 0)
                     {
-                        await Navigation.();
+                        await Navigation.PopModalAsync();
                     }
 
                 });
@@ -50,14 +66,11 @@ namespace Aplicativo.Services
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        public static bool ValidateQRCode(string content)
+        public async Task<QRCodePayload> ValidateQRCode(string content)
         {
             //Trocar a lógica depois, a lógica atual serve somente para testar a troca de cores dinamicas do "Hash scaneado" da home
-            if(content.Length> 10)
-            {
-                return true;
-            }
-            return false;
+
+            return await _httpService.CheckHash(content);
         }
 
     }
