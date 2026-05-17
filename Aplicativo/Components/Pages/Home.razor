@@ -9,24 +9,25 @@
         {
             <div class="validated-content-div">
                 <MudText Align="Align.Center"> Hash scaneado: <span style="@(IsTheHashValid ? $"{Valid}" : $"{Invalid}")"> @(IsTheHashValid ? "Valido" : "Invalido")</span> </MudText>
-               
                 <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Curso:@qrCodeContent.cursos[0] </MudText>
-                <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Disciplina:@qrCodeContent.disciplinas[0] </MudText>
+                @foreach (var disciplina in qrCodeContent.disciplinas!)
+                {
+                    <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Disciplina: @disciplina </MudText>
+                }
                 <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Identificador:@qrCodeContent.identificador </MudText>
             </div>
         }
     </MudPaper>
 
     <div class="validate-button-div">
-        <MudButton 
-            Class="validate-button"
-            IconSize="Size.Large"
-            EndIcon="@Icons.Material.Filled.CameraAlt"
-            FullWidth="true"
-            Variant="Variant.Filled" 
-            Color="Color.Primary"
-            OnClick="@OpenScanner"
-            Disabled="@DisableButton">
+        <MudButton Class="validate-button"
+                   IconSize="Size.Large"
+                   EndIcon="@Icons.Material.Filled.CameraAlt"
+                   FullWidth="true"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="@OpenScanner"
+                   Disabled="@DisableButton">
             Validar
         </MudButton>
     </div>
