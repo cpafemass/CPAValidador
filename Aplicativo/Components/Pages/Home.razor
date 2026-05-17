@@ -9,11 +9,19 @@
         {
             <div class="validated-content-div">
                 <MudText Align="Align.Center"> Hash scaneado: <span style="@(IsTheHashValid ? $"{Valid}" : $"{Invalid}")"> @(IsTheHashValid ? "Valido" : "Invalido")</span> </MudText>
-                <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Curso:@qrCodeContent.cursos[0] </MudText>
-                @foreach (var disciplina in qrCodeContent.disciplinas!)
+                @if(qrCodeContent.cursos != null)
                 {
-                    <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Disciplina: @disciplina </MudText>
+                    <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Curso:@qrCodeContent.cursos[0] </MudText>
                 }
+
+                @if(qrCodeContent.disciplinas != null)
+                {
+                    @foreach (var disciplina in qrCodeContent.disciplinas!)
+                    {
+                        <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Disciplina: @disciplina </MudText>
+                    }
+                }
+               
                 <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Identificador:@qrCodeContent.identificador </MudText>
             </div>
         }
@@ -52,17 +60,35 @@
     {
         qrCodeContent = null;
         var scanner = new Scanner(HttpServices);
-
-        //await Application.Current.MainPage.Navigation.PushModalAsync(scanner);
         DisableButton = true;
         await Application.Current.Windows[0].Navigation.PushModalAsync(scanner);
 
         scanner.Unloaded += async (s, e) =>
         {
-            HashToValidate = scanner.Result;
-            
-            qrCodeContent = await scanner.ValidateQRCode(HashToValidate);
-            IsTheHashValid = !qrCodeContent.HasFailed; //Se o QRCode for válido, então o hash é válido, caso contrário, o hash é inválido.
+            try
+            {
+                
+                HashToValidate = scanner.Result;
+                qrCodeContent = await scanner.ValidateQRCode(HashToValidate);
+                IsTheHashValid = !qrCodeContent.HasFailed;
+            }
+            catch (Exception ex)
+            {
+                qrCodeContent = new QRCodePayload{
+                    HasFailed = true,
+                    identificador = "Algo deu errado no processamento do QR Code, tente novamente.",
+                    cursos = null,
+                    disciplinas = null
+                };
+                IsTheHashValid = false;
+
+                Console.WriteLine($"Erro ao validar o QRCode: {ex.Message}");
+
+            }finally
+            {
+                DisableButton = false;
+                StateHasChanged();
+            }
             DisableButton = false;
             StateHasChanged();
         };

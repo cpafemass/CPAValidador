@@ -14,7 +14,8 @@ namespace Aplicativo.Services
         public HttpService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-
+            _httpClient.Timeout = TimeSpan.FromSeconds(10);
+            //se demorar mais que 10 segundos, o request é cancelado e uma exceção é lançada.
         }
 
 
