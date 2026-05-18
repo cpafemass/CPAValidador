@@ -1,0 +1,32 @@
+.main-div {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+    .main-div ::deep .validate-button-div {
+        justify-self: !important center;
+        align-self: !important center;
+    }
+
+    .main-div ::deep .validate-button {
+        width: 50vw;
+        height: 10vh;
+    }
+
+    .main-div ::deep .main-title-div {
+        height: 15vh;
+    }
+
+    .main-div ::deep .validated-content-div {
+        
+    }
+
+    .main-div ::deep .validated-content-mudpaper {
+        padding-right: 5vw;
+        padding-left: 5vw;
+        height: 15vh;
+        margin-bottom: 30vh;
+    }

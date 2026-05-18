@@ -1,0 +1,96 @@
+﻿@page "/"
+@inject HttpService HttpServices
+<div class="main-div">
+    <div class="main-title-div">
+        <h1>Validador de CPA</h1>
+    </div>
+    <MudPaper Class="validated-content-mudpaper" Elevation="0">
+        @if (qrCodeContent != null)
+        {
+            <div class="validated-content-div">
+                <MudText Align="Align.Center"> Hash scaneado: <span style="@(IsTheHashValid ? $"{Valid}" : $"{Invalid}")"> @(IsTheHashValid ? "Valido" : "Invalido")</span> </MudText>
+                @if(qrCodeContent.cursos != null)
+                {
+                    <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Curso:@qrCodeContent.cursos[0] </MudText>
+                }
+
+                @if(qrCodeContent.disciplinas != null)
+                {
+                    @foreach (var disciplina in qrCodeContent.disciplinas!)
+                    {
+                        <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Disciplina: @disciplina </MudText>
+                    }
+                }
+               
+                <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Identificador:@qrCodeContent.identificador </MudText>
+            </div>
+        }
+    </MudPaper>
+
+    <div class="validate-button-div">
+        <MudButton Class="validate-button"
+                   IconSize="Size.Large"
+                   EndIcon="@Icons.Material.Filled.CameraAlt"
+                   FullWidth="true"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="@OpenScanner"
+                   Disabled="@DisableButton">
+            Validar
+        </MudButton>
+    </div>
+</div>
+
+
+
+
+@code {
+    private QRCodePayload? qrCodeContent;
+    private string? HashToValidate = null;
+    //O QRCode vai contar uma lista de Hash, então esse tipo deverá virar uma List<string?>
+    private bool IsTheHashValid = false;
+    private bool HasTheHasBeenValidated = false;
+    private bool DisableButton = false;
+
+    private string Invalid = "color: red;font-weight: bold; font-size: x-large";
+    private string Valid = "color: green;font-weight: bold; font-size: x-large";
+
+
+    private async Task OpenScanner()
+    {
+        qrCodeContent = null;
+        var scanner = new Scanner(HttpServices);
+        DisableButton = true;
+        await Application.Current.Windows[0].Navigation.PushModalAsync(scanner);
+
+        scanner.Unloaded += async (s, e) =>
+        {
+            try
+            {
+                
+                HashToValidate = scanner.Result;
+                qrCodeContent = await scanner.ValidateQRCode(HashToValidate);
+                IsTheHashValid = !qrCodeContent.HasFailed;
+            }
+            catch (Exception ex)
+            {
+                qrCodeContent = new QRCodePayload{
+                    HasFailed = true,
+                    identificador = "Algo deu errado no processamento do QR Code, tente novamente.",
+                    cursos = null,
+                    disciplinas = null
+                };
+                IsTheHashValid = false;
+
+                Console.WriteLine($"Erro ao validar o QRCode: {ex.Message}");
+
+            }finally
+            {
+                DisableButton = false;
+                StateHasChanged();
+            }
+            DisableButton = false;
+            StateHasChanged();
+        };
+    }
+}

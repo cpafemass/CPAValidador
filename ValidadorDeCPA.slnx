@@ -1,1 +1,5 @@
-<Solution />
+<Solution>
+  <Project Path="Aplicativo/Aplicativo.csproj" Id="6db80b5b-df92-4451-98da-becf461bd6bb">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>
