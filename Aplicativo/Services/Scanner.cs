@@ -15,13 +15,15 @@ namespace Aplicativo.Services
         public Scanner()
         {
             InitializeComponent();
-           
+
             barcodeReader.Options = new BarcodeReaderOptions
             {
                 Formats = BarcodeFormat.QrCode,
                 AutoRotate = true,
                 Multiple = false,
-
+                TryHarder = false,
+                TryInverted = false,
+                
             };
         }
         public Scanner(HttpService httpService)

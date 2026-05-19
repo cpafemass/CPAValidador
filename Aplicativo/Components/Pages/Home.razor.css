@@ -16,12 +16,16 @@
         height: 10vh;
     }
 
+    .main-div ::deep .history-button {
+        width: 50vw;
+        height: 10vh;
+    }
+
     .main-div ::deep .main-title-div {
         height: 15vh;
     }
 
     .main-div ::deep .validated-content-div {
-        
     }
 
     .main-div ::deep .validated-content-mudpaper {
