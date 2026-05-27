@@ -12,7 +12,8 @@
 *.user
 *.userosscache
 *.sln.docstates
-
+*.keystore
+*.jks
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
