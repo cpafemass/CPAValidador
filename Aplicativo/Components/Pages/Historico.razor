@@ -1,0 +1,47 @@
+﻿@page "/history"
+@inject HttpService HttpServices
+<div class="main-div">
+    <h1 style="margin-bottom: 5vh;">Histórico</h1>
+
+    <div class="history-content">
+        @foreach (QRCodePayload x in HistoricoList)
+        {
+            <MudPaper Class="mudpaper-history-content" Outlined="true" Square="true" Elevation="1">
+                
+                <MudText Align="Align.Center">Curso: @x.cursos[0]</MudText>
+                @if (x.disciplinas is not null)
+                {
+                    @foreach (var y in x.disciplinas!)
+                    {
+                        <MudText Align="Align.Center">Disciplina: @y</MudText>
+                    }
+                }
+            </MudPaper>
+        }
+    </div>
+
+    
+</div>
+@code {
+    private List<QRCodePayload> HistoricoList = new List<QRCodePayload>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await HttpServices.GetHistory();
+
+        if (result is null)
+        {
+            HistoricoList.Add(new QRCodePayload
+            {
+                disciplinas = new List<string> { "Falha ao obter histórico" },
+                cursos = new List<string> { "Histórico inexistente ou servidor fora do ar" }
+            });
+        }
+        else
+        {
+            HistoricoList = result;
+        }
+    }
+
+
+}

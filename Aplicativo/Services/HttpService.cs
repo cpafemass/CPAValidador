@@ -33,6 +33,20 @@ namespace Aplicativo.Services
                 return new QRCodePayload(true);
             }
         }
+        public async Task<List<QRCodePayload?>> GetHistory()
+        {
+            var response = await _httpClient.GetAsync("validacao/historico");
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var result = await response.Content.ReadFromJsonAsync<List<QRCodePayload>>();
+                result.ForEach(x => x.HasFailed = false);
+                return result;
+            }
+            else
+            {
+                return null;
+            }
+        }
 
 
     }

@@ -23,6 +23,7 @@ namespace Aplicativo.Resources.Scaffolding
 
         [JsonPropertyName("cpf")]
         public string? cpf { get; set; }
+        // Esse Payload possui o campo de cpf por que ele espelha o mesmo dto que o front envia para o back para criação do hash, ele não é utilizado no aplicativo de validação
         [JsonPropertyName("matricula")]
         public string? matricula { get; set; }
         [JsonPropertyName("cursos")]
