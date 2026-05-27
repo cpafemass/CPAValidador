@@ -1,4 +1,4 @@
-﻿using Aplicativo.Resources.Scaffolding;
+﻿ using Aplicativo.Resources.Scaffolding;
 using Aplicativo.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

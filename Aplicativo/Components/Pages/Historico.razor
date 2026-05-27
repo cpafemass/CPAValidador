@@ -7,7 +7,7 @@
         @foreach (QRCodePayload x in HistoricoList)
         {
             <MudPaper Class="mudpaper-history-content" Outlined="true" Square="true" Elevation="1">
-                <MudText Align="Align.Center">CPF(4 Primeiros dígitos): @x.cpf</MudText>
+                
                 <MudText Align="Align.Center">Curso: @x.cursos[0]</MudText>
                 @if (x.disciplinas is not null)
                 {
@@ -33,7 +33,7 @@
         {
             HistoricoList.Add(new QRCodePayload
             {
-                cpf = "Falha ao obter histórico",
+                disciplinas = new List<string> { "Falha ao obter histórico" },
                 cursos = new List<string> { "Histórico inexistente ou servidor fora do ar" }
             });
         }
