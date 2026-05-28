@@ -36,7 +36,8 @@ namespace Aplicativo
             
             builder.Services.AddHttpClient<HttpService>(options =>
             {
-                options.BaseAddress = new Uri(builder.Configuration["Configs:BaseUrl"]!);
+                var url = builder.Configuration["Configs:BaseUrl"];
+                options.BaseAddress = new Uri(url is null ? "http://localhost" : url);
             });
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
