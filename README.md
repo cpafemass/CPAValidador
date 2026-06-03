@@ -20,3 +20,13 @@ Simples aplicativo de verificação de QRCode que pode ser compilado e publicado
 8. Em seguida, irá abrir uma janela de criação de chave de assinatuira, nela, você irá preencher os campos com as informações necessárias e apertar em "Criar".
 9. Com a chave criada e selecionada, aperte em salvar como e escolha um local de salvamento de fácil acesso
 10. Após isso, você poderá instalar o aplicativo no seu android (lembre-se de permitir instalação de aplicativo de terceiros no celular).
+
+## Estrutura de pastas
+`Aplicativo/Platforms`: Permissões de plataforma, modificar somente se necessário. <br>
+`Aplicativo/Components`: Componentes do aplicativo, como telas com **rota** e componentes soltos.  <br>
+`Aplicativo/Components/Layout`: Pasta onde se localiza o `MainLayout.razor` e `MainLayout.razor.css`, são esses arquivos que "seguram" a renderização das páginas.  <br>
+`Aplicativo/Components/Pages`: Páginas com rotas.  <br>
+`Aplicativo/Resources`: Recursos do aplicativo.  <br>
+`Aplicativo/Services`: Serviços injetados via injeção de dependencia dentro dos componentes com/sem rota.  <br>
+`Aplicativo`: Arquivos de inicialização do aplicativo e configuração da solução (csproj).  <br> 
+
