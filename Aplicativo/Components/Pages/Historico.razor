@@ -1,47 +1,61 @@
-﻿@page "/history"
+@page "/history"
 @inject HttpService HttpServices
+
 <div class="main-div">
     <h1 style="margin-bottom: 5vh;">Histórico</h1>
-
-    <div class="history-content">
-        @foreach (QRCodePayload x in HistoricoList)
-        {
-            <MudPaper Class="mudpaper-history-content" Outlined="true" Square="true" Elevation="1">
-                
-                <MudText Align="Align.Center">Curso: @x.cursos[0]</MudText>
-                @if (x.disciplinas is not null)
-                {
-                    @foreach (var y in x.disciplinas!)
+    <MudText Typo="Typo.body2">Últimas validações registradas no servidor.</MudText>
+    @if (loading)
+    {
+        <MudText>Carregando histórico...</MudText>
+    }
+    else if (message is not null)
+    {
+        <MudText role="status">@message</MudText>
+    }
+    else
+    {
+        <div class="history-content">
+            @foreach (var item in history)
+            {
+                <MudPaper Class="mudpaper-history-content" Outlined="true" Square="true" Elevation="1">
+                    <MudText Align="Align.Center">@(item.HasFailed ? "Validação não confirmada" : "QR Code validado")</MudText>
+                  
+                    @if (!string.IsNullOrEmpty(item.CodigoDigestFinal))
                     {
-                        <MudText Align="Align.Center">Disciplina: @y</MudText>
+                        <MudText Align="Align.Center">Identificador: <code>@item.CodigoDigestFinal</code></MudText>
                     }
-                }
-            </MudPaper>
-        }
-    </div>
-
-    
+                </MudPaper>
+            }
+        </div>
+    }
+    <MudButton Href="/">Voltar</MudButton>
 </div>
+
 @code {
-    private List<QRCodePayload> HistoricoList = new List<QRCodePayload>();
+    private List<QRCodePayload> history = new();
+    private bool loading = true;
+    private string? message;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await HttpServices.GetHistory();
-
-        if (result is null)
+        try
         {
-            HistoricoList.Add(new QRCodePayload
+            var result = await HttpServices.GetHistory();
+            if (result is null)
+                message = "Não foi possível obter o histórico. Confira a conexão e o endereço do backend.";
+            else
             {
-                disciplinas = new List<string> { "Falha ao obter histórico" },
-                cursos = new List<string> { "Histórico inexistente ou servidor fora do ar" }
-            });
+                history = result;
+                if (history.Count == 0) message = "Nenhuma validação registrada.";
+            }
         }
-        else
+        catch (Exception)
         {
-            HistoricoList = result;
+            message = "Não foi possível obter o histórico. Confira a conexão e o endereço do backend.";
+        }
+        finally
+        {
+            loading = false;
         }
     }
-
-
 }

@@ -1,114 +1,80 @@
-﻿@page "/"
+@page "/"
 @inject NavigationManager navigationManager
 @inject HttpService HttpServices
-<div class="main-div">
-    <div class="main-title-div">
-        <h1>Validador de CPA</h1>
-    </div>
-    <MudPaper Class="validated-content-mudpaper" Elevation="0">
-        @if (qrCodeContent != null)
-        {
-            <div class="validated-content-div">
-                <MudText Align="Align.Center"> Hash scaneado: <span style="@(IsTheHashValid ? $"{Valid}" : $"{Invalid}")"> @(IsTheHashValid ? "Valido" : "Invalido")</span> </MudText>
-                @if(qrCodeContent.cursos != null)
-                {
-                    <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Curso:@qrCodeContent.cursos[0] </MudText>
-                }
 
-                @if(qrCodeContent.disciplinas != null)
+<div class="main-div">
+    <div class="main-title-div"><h1>Validador de CPA</h1></div>
+    <MudPaper Class="validated-content-mudpaper" Elevation="0">
+        @if (qrCodeContent is not null)
+        {
+            <div class="validated-content-div" role="status">
+                <MudText Align="Align.Center" Color="@(qrCodeContent.HasFailed ? Color.Error : Color.Success)">
+                    @(qrCodeContent.HasFailed ? "Validação não confirmada" : "QR Code válido")
+                </MudText>
+                <MudText Align="Align.Center">@qrCodeContent.Mensagem</MudText>
+                @if (!qrCodeContent.HasFailed && !string.IsNullOrEmpty(qrCodeContent.CodigoDigestFinal))
                 {
-                    @foreach (var disciplina in qrCodeContent.disciplinas!)
-                    {
-                        <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Disciplina: @disciplina </MudText>
-                    }
+                    <MudText Align="Align.Center">Identificador: <code>@qrCodeContent.CodigoDigestFinal</code></MudText>
                 }
-               
-                <!-- <MudText Typo="Typo.body1" Style="word-break: break-word;" Align="Align.Center">Identificador:@qrCodeContent.identificador </MudText> -->
             </div>
         }
+        @if (!string.IsNullOrEmpty(scannerMessage))
+        {
+            <MudText Align="Align.Center" role="status">@scannerMessage</MudText>
+        }
     </MudPaper>
-
     <div class="validate-button-div">
-        <MudButton Class="validate-button"
-                   IconSize="Size.Large"
-                   EndIcon="@Icons.Material.Filled.CameraAlt"
-                   FullWidth="true"
-                   Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   OnClick="@OpenScanner"
-                   Disabled="@DisableButton">
-            Validar
-        </MudButton>
+        <MudButton Class="validate-button" EndIcon="@Icons.Material.Filled.CameraAlt"
+                   FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="OpenScanner" Disabled="busy">@(busy ? "Aguarde..." : "Validar")</MudButton>
     </div>
     <div class="validate-button-div">
-        <MudButton Class="history-button" 
-            IconSize="Size.Large"
-            EndIcon="@Icons.Material.Filled.History"
-            FullWidth="true"
-            Variant="Variant.Filled"
-            Color="Color.Secondary"
-            OnClick="@GoToHistory">
-            Histórico
-            
-        </MudButton>
+        <MudButton Class="history-button" EndIcon="@Icons.Material.Filled.History"
+                   FullWidth="true" Variant="Variant.Filled" Color="Color.Secondary"
+                   OnClick="@(() => navigationManager.NavigateTo("/history"))" Disabled="busy">Histórico</MudButton>
     </div>
 </div>
 
-
-
-
 @code {
     private QRCodePayload? qrCodeContent;
-    private string? HashToValidate = null;
-    //O QRCode vai contar uma lista de Hash, então esse tipo deverá virar uma List<string?>
-    private bool IsTheHashValid = false;
-    private bool HasTheHasBeenValidated = false;
-    private bool DisableButton = false;
-
-    private string Invalid = "color: red;font-weight: bold; font-size: x-large";
-    private string Valid = "color: green;font-weight: bold; font-size: x-large";
-
-
+    private bool busy;
+    private string? scannerMessage;
     private async Task OpenScanner()
     {
+        if (busy) return;
         qrCodeContent = null;
-        var scanner = new Scanner(HttpServices);
-        DisableButton = true;
-        await Application.Current.Windows[0].Navigation.PushModalAsync(scanner);
-
-        scanner.Unloaded += async (s, e) =>
+        scannerMessage = null;
+        if (!HttpServices.IsConfigured)
         {
-            try
+            scannerMessage = "O endereço da API não foi configurado na publicação do aplicativo.";
+            return;
+        }
+        busy = true;
+        try
+        {
+            var permission = await Permissions.RequestAsync<Permissions.Camera>();
+            if (permission != PermissionStatus.Granted)
             {
-
-                HashToValidate = scanner.Result;
-                qrCodeContent = await scanner.ValidateQRCode(HashToValidate);
-                IsTheHashValid = !qrCodeContent.HasFailed;
+                scannerMessage = "Permita o acesso à câmera nas configurações do dispositivo para ler o QR Code.";
+                return;
             }
-            catch (Exception ex)
+            var scanner = new Scanner();
+            await Application.Current!.Windows[0].Navigation.PushModalAsync(scanner);
+            var codigo = await scanner.Completion;
+            if (string.IsNullOrWhiteSpace(codigo))
             {
-                qrCodeContent = new QRCodePayload{
-                    HasFailed = true,
-                    identificador = "Algo deu errado no processamento do QR Code, tente novamente.",
-                    cursos = null,
-                    disciplinas = null
-                };
-                IsTheHashValid = false;
-
-                Console.WriteLine($"Erro ao validar o QRCode: {ex.Message}");
-
-            }finally
-            {
-                DisableButton = false;
-                StateHasChanged();
+                scannerMessage = "Leitura cancelada.";
+                return;
             }
-            DisableButton = false;
-            StateHasChanged();
-        };
-    }
-
-    private async Task GoToHistory()
-    {
-        navigationManager.NavigateTo("/history");
+            qrCodeContent = await HttpServices.CheckHash(codigo);
+        }
+        catch (Exception)
+        {
+            scannerMessage = "Não foi possível concluir a leitura. Confira a câmera, a conexão e o histórico antes de tentar novamente.";
+        }
+        finally
+        {
+            busy = false;
+        }
     }
 }
