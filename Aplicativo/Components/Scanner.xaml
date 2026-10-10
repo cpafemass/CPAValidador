@@ -23,5 +23,7 @@
         </Border.StrokeShape>
         
     </Border>
+        <Button Text="Cancelar" Clicked="CancelScan"
+                VerticalOptions="End" Margin="20" />
     </Grid>
 </ContentPage>

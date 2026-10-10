@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Aplicativo/Services/HttpService.cs" Link="HttpService.cs" />
+    <Compile Include="../Aplicativo/Resources/Scaffolding/QRCodePayload.cs" Link="QRCodePayload.cs" />
+  </ItemGroup>
+</Project>

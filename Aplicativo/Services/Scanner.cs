@@ -1,79 +1,56 @@
-﻿using Aplicativo.Resources.Scaffolding;
-
-using System;
-using System.Collections.Generic;
-using System.Text;
 using ZXing.Net.Maui;
 
-namespace Aplicativo.Services
+namespace Aplicativo.Services;
+
+public partial class Scanner : ContentPage
 {
-    public partial class Scanner : ContentPage
+    public string? Result { get; private set; }
+    private int _isProcessing;
+    private readonly TaskCompletionSource<string?> _completion = new();
+    public Task<string?> Completion => _completion.Task;
+
+    public Scanner()
     {
-        public string Result { get; set; }
-        private bool isProcessing = false;
-        private readonly HttpService _httpService;
-        public Scanner()
+        InitializeComponent();
+        barcodeReader.Options = new BarcodeReaderOptions
         {
-            InitializeComponent();
+            Formats = BarcodeFormat.QrCode,
+            AutoRotate = true,
+            Multiple = false,
+            TryHarder = true
+        };
+    }
 
-            barcodeReader.Options = new BarcodeReaderOptions
-            {
-                Formats = BarcodeFormat.QrCode,
-                AutoRotate = true,
-                Multiple = false,
-                TryHarder = false,
-                TryInverted = false,
-                
-            };
-        }
-        public Scanner(HttpService httpService)
+    private void BarcodesDetected(object? sender, BarcodeDetectionEventArgs e)
+    {
+        var result = e.Results.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Value));
+        if (result == null || Interlocked.Exchange(ref _isProcessing, 1) != 0) return;
+
+        MainThread.BeginInvokeOnMainThread(async () =>
         {
-            _httpService = httpService;
-            InitializeComponent();
-
-            barcodeReader.Options = new BarcodeReaderOptions
+            barcodeReader.IsDetecting = false;
+            Result = result.Value;
+            try
             {
-                Formats = BarcodeFormat.QrCode,
-                AutoRotate = true,
-                Multiple = false,
-                
-            };
-        }
-
-
-        private void BarcodesDetected(object sender, BarcodeDetectionEventArgs e)
-        {
-            if (isProcessing) return;
-            var results = e.Results.FirstOrDefault();
-            if (results != null)
-            {
-                isProcessing = true;
-
-                barcodeReader.IsDetecting = false;
-
-                MainThread.BeginInvokeOnMainThread(async () =>
-                {
-                    Result = results.Value;
-
-                    if (Navigation.ModalStack.Count > 0)
-                    {
-                        await Navigation.PopModalAsync();
-                    }
-
-                });
+                if (Navigation.ModalStack.Contains(this))
+                    await Navigation.PopModalAsync();
             }
-        }
-        /// <summary>
-        /// Função responsável pela validação do código, ela irá chamar o DatabaseServices que terá acesso direto ao banco de dados e verificará o hash
-        /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        public async Task<QRCodePayload> ValidateQRCode(string content)
-        {
-            //Trocar a lógica depois, a lógica atual serve somente para testar a troca de cores dinamicas do "Hash scaneado" da home
+            finally
+            {
+                _completion.TrySetResult(Result);
+            }
+        });
+    }
 
-            return await _httpService.CheckHash(content);
-        }
+    protected override void OnDisappearing()
+    {
+        barcodeReader.IsDetecting = false;
+        _completion.TrySetResult(Result);
+        base.OnDisappearing();
+    }
 
+    private async void CancelScan(object? sender, EventArgs e)
+    {
+        await Navigation.PopModalAsync();
     }
 }

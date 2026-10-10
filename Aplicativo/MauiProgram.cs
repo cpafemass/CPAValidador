@@ -36,8 +36,10 @@ namespace Aplicativo
             
             builder.Services.AddHttpClient<HttpService>(options =>
             {
-                var url = builder.Configuration["Configs:BaseUrl"]; //Colocar um endereço no appsettings.json
-                options.BaseAddress = new Uri(url is null ? "Colocar o endereço do backend no BaseURL" : url);
+                var url = builder.Configuration["Configs:BaseUrl"] ?? "";
+                if (Uri.TryCreate(url.Trim().TrimEnd('/') + "/", UriKind.Absolute, out var address)
+                    && (address.Scheme == Uri.UriSchemeHttps || address.Scheme == Uri.UriSchemeHttp))
+                    options.BaseAddress = address;
             });
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
