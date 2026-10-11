@@ -86,6 +86,31 @@ await Check("Histórico sem dados pessoais", async () =>
     Assert(history![0].CodigoDigestFinal == "012345abcd", "O histórico deve preservar o identificador da validação.");
 });
 
+await Check("Leitura e histórico preservam campanha, versão, curso, disciplinas e IDs", async () =>
+{
+    var body = $$$"""
+    {"codigoValidacao":"{{{token}}}","validado":true,"status":"VALIDADO","codigoDigestFinal":"012345abcd",
+     "resumo":{"validacaoId":42,"campanha":{"codigo":"outubro","nome":"Outubro"},
+     "formulario":{"codigo":"disciplinas","nome":"Avaliação","versao":2,"publico":"aluno","escopo":"DISCIPLINA"},
+     "avaliacoes":[{"id":7,"curso":{"id":3,"nome":"Computação"},"disciplina":{"id":4,"nome":"Algoritmos","professor":"Docente"},"respostaIds":[8,9]}]}}
+    """;
+    var service = Service(new StubHandler(request => Json(HttpStatusCode.OK, request.Method == HttpMethod.Get ? $"[{body}]" : body)));
+    var result = await service.CheckHash(token);
+    Assert(!result.HasFailed && result.Resumo?.ValidacaoId == 42, "Resumo da leitura ausente.");
+    Assert(result.Resumo!.Formulario?.Versao == 2 && result.Resumo.Campanha?.Codigo == "outubro", "Campanha/versão incorretas.");
+    Assert(result.Resumo.Avaliacoes[0].Disciplina?.Nome == "Algoritmos" && result.Resumo.Avaliacoes[0].Curso?.Nome == "Computação", "Curso/disciplina incorretos.");
+    Assert(result.Resumo.Avaliacoes[0].RespostaIds.SequenceEqual(new long[] { 8, 9 }), "IDs das respostas incorretos.");
+    var history = await service.GetHistory();
+    Assert(history?.Single().Resumo?.ValidacaoId == 42 && history[0].Resumo!.Avaliacoes[0].Id == 7, "Histórico perdeu os vínculos.");
+});
+
+await Check("Comprovante geral e legado sem disciplina continuam aceitos", async () =>
+{
+    var service = Service(new StubHandler(_ => Json(HttpStatusCode.OK, $$$"""{"codigoValidacao":"{{{token}}}","validado":true,"status":"VALIDADO","resumo":{"validacaoId":1,"campanha":null,"formulario":null,"avaliacoes":[]}}""")));
+    var result = await service.CheckHash(token);
+    Assert(!result.HasFailed && result.Resumo?.Formulario is null, "Código sem vínculo deve continuar compatível.");
+});
+
 Console.WriteLine($"{passed} testes passaram.");
 
 async Task Check(string name, Func<Task> test)

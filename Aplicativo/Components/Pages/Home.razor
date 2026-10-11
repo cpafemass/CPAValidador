@@ -17,6 +17,10 @@
                     <MudText Align="Align.Center">Identificador: <code>@qrCodeContent.CodigoDigestFinal</code></MudText>
                 }
             </div>
+            @if (!qrCodeContent.HasFailed)
+            {
+                <Aplicativo.Components.ValidationSummary Summary="qrCodeContent.Resumo" />
+            }
         }
         @if (!string.IsNullOrEmpty(scannerMessage))
         {

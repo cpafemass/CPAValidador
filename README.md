@@ -13,7 +13,9 @@ Simples aplicativo de verificação de QRCode que pode ser compilado e publicado
 
 O frontend transforma o valor `qrCode` recebido de `POST /formulario` em uma imagem QR. O conteúdo dessa imagem é um código opaco, sem dados pessoais. O aplicativo lê esse texto e envia uma única requisição `PUT /validacao/validar-hash?codigoValidacao=...`, com o código escapado para a URL.
 
-A resposta utiliza `codigoValidacao`, `validado`, `status`, `mensagem` e `codigoDigestFinal`. Após validar um QR Code, o aplicativo exibe o identificador formado pelos 10 últimos caracteres do digest armazenado no backend. Esse mesmo identificador aparece em cada item do histórico das 10 últimas validações, para permitir conferir a leitura. Por ser hexadecimal, ele pode conter números e letras de `a` a `f`. Cursos e disciplinas não são retornados pela API atual.
+A resposta utiliza `codigoValidacao`, `validado`, `status`, `mensagem` e `codigoDigestFinal`. Após validar um QR Code, o aplicativo exibe o identificador formado pelos 10 últimos caracteres do digest armazenado no backend. Esse mesmo identificador aparece em cada item do histórico das 10 últimas validações, para permitir conferir a leitura. Por ser hexadecimal, ele pode conter números e letras de `a` a `f`.
+
+O campo adicional `resumo` permite mostrar, na leitura e no histórico, o ID da validação, a campanha, o formulário e sua versão, os cursos, disciplinas e professores, além dos IDs das avaliações e respostas vinculadas. CPF, matrícula, hashes pessoais e conteúdo das respostas não são retornados. Comprovantes antigos e respostas de versões anteriores da API continuam funcionando; quando o resumo não existe, o aplicativo informa que o contexto não está disponível.
 
 O endereço da API é definido pelo responsável pela publicação em `Aplicativo/appsettings.json`, no campo `Configs:BaseUrl`, e é incorporado ao aplicativo. O usuário não configura nem altera esse endereço pelo aplicativo.
 

@@ -1,0 +1,32 @@
+@if (Summary?.Formulario is null)
+{
+    <MudText Typo="Typo.body2">Contexto do comprovante não disponível.</MudText>
+}
+else
+{
+    <div class="validation-summary">
+        <MudText>Validação: @Summary.ValidacaoId</MudText>
+        <MudText>Campanha: @Summary.Campanha?.Nome (@Summary.Campanha?.Codigo)</MudText>
+        <MudText>Formulário: @Summary.Formulario.Nome · versão @Summary.Formulario.Versao</MudText>
+        @foreach (var evaluation in Summary.Avaliacoes)
+        {
+            <MudPaper Outlined="true" Class="pa-3 my-2">
+                <MudText>Avaliação: @evaluation.Id</MudText>
+                @if (evaluation.Disciplina is not null)
+                {
+                    <MudText>Curso: @evaluation.Curso?.Nome</MudText>
+                    <MudText>Disciplina: @evaluation.Disciplina.Nome (ID @evaluation.Disciplina.Id)</MudText>
+                    <MudText>Professor: @evaluation.Disciplina.Professor</MudText>
+                }
+                else
+                {
+                    <MudText>Avaliação geral, sem disciplina.</MudText>
+                }
+                <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">Respostas: @string.Join(", ", evaluation.RespostaIds)</MudText>
+            </MudPaper>
+        }
+    </div>
+}
+@code {
+    [Parameter] public ResumoValidacao? Summary { get; set; }
+}
