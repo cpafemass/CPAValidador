@@ -1,4 +1,4 @@
-@if (Summary?.Formulario is null)
+@if (Summary is null || !Summary.HasContext)
 {
     <MudText Typo="Typo.body2">Contexto do comprovante não disponível.</MudText>
 }
@@ -6,12 +6,22 @@ else
 {
     <div class="validation-summary">
         <MudText>Validação: @Summary.ValidacaoId</MudText>
-        <MudText>Campanha: @Summary.Campanha?.Nome (@Summary.Campanha?.Codigo)</MudText>
-        <MudText>Formulário: @Summary.Formulario.Nome · versão @Summary.Formulario.Versao</MudText>
+        @if (Summary.Campanha is not null)
+        {
+            <MudText>Campanha: @Summary.Campanha.Nome (@Summary.Campanha.Codigo)</MudText>
+        }
+        @if (Summary.Formulario is not null)
+        {
+            <MudText>Formulário: @Summary.Formulario.Nome · versão @Summary.Formulario.Versao</MudText>
+        }
         @foreach (var evaluation in Summary.Avaliacoes)
         {
             <MudPaper Outlined="true" Class="pa-3 my-2">
                 <MudText>Avaliação: @evaluation.Id</MudText>
+                @if (evaluation.Formulario is not null && Summary.Formulario is null)
+                {
+                    <MudText>Formulário: @evaluation.Formulario.Nome (@evaluation.Formulario.Codigo) · versão @evaluation.Formulario.Versao</MudText>
+                }
                 @if (evaluation.Disciplina is not null)
                 {
                     <MudText>Curso: @evaluation.Curso?.Nome</MudText>

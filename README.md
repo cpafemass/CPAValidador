@@ -17,6 +17,8 @@ A resposta utiliza `codigoValidacao`, `validado`, `status`, `mensagem` e `codigo
 
 O campo adicional `resumo` permite mostrar, na leitura e no histórico, o ID da validação, a campanha, o formulário e sua versão, os cursos, disciplinas e professores, além dos IDs das avaliações e respostas vinculadas. CPF, matrícula, hashes pessoais e conteúdo das respostas não são retornados. Comprovantes antigos e respostas de versões anteriores da API continuam funcionando; quando o resumo não existe, o aplicativo informa que o contexto não está disponível.
 
+O comprovante final do aluno é emitido pelo backend em `POST /formulario/aluno/progresso` após concluir os formulários da campanha. A leitura continua usando o mesmo endpoint de validação. Nesse comprovante, `resumo.formulario` é nulo e cada item de `resumo.avaliacoes` contém seu próprio `formulario` (código, nome, versão, público e escopo). O app aceita esse formato e mostra o nome, código e versão de cada formulário junto às avaliações na leitura e no histórico, incluindo avaliações gerais e por disciplina. O formato anterior, com formulário somente no resumo principal, continua aceito.
+
 O endereço da API é definido pelo responsável pela publicação em `Aplicativo/appsettings.json`, no campo `Configs:BaseUrl`, e é incorporado ao aplicativo. O usuário não configura nem altera esse endereço pelo aplicativo.
 
 - Produção: utilize o endereço HTTPS da API, incluindo um eventual prefixo de caminho.

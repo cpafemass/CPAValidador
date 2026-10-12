@@ -100,8 +100,31 @@ await Check("Leitura e histórico preservam campanha, versão, curso, disciplina
     Assert(result.Resumo!.Formulario?.Versao == 2 && result.Resumo.Campanha?.Codigo == "outubro", "Campanha/versão incorretas.");
     Assert(result.Resumo.Avaliacoes[0].Disciplina?.Nome == "Algoritmos" && result.Resumo.Avaliacoes[0].Curso?.Nome == "Computação", "Curso/disciplina incorretos.");
     Assert(result.Resumo.Avaliacoes[0].RespostaIds.SequenceEqual(new long[] { 8, 9 }), "IDs das respostas incorretos.");
+    Assert(result.Resumo.HasContext && result.Resumo.Avaliacoes[0].Formulario is null, "Contrato anterior sem formulário por avaliação deve permanecer compatível.");
     var history = await service.GetHistory();
     Assert(history?.Single().Resumo?.ValidacaoId == 42 && history[0].Resumo!.Avaliacoes[0].Id == 7, "Histórico perdeu os vínculos.");
+});
+
+await Check("Comprovante final preserva vários formulários na leitura e no histórico", async () =>
+{
+    var body = $$$"""
+    {"codigoValidacao":"{{{token}}}","validado":true,"status":"VALIDADO","codigoDigestFinal":"012345abcd",
+     "resumo":{"validacaoId":42,"campanha":{"codigo":"outubro","nome":"Outubro"},"formulario":null,
+     "avaliacoes":[
+       {"id":7,"curso":null,"disciplina":null,"respostaIds":[8,9],
+        "formulario":{"codigo":"geral","nome":"Avaliação institucional","versao":1,"publico":"aluno","escopo":"GERAL"}},
+       {"id":10,"curso":{"id":3,"nome":"Computação"},"disciplina":{"id":4,"nome":"Algoritmos","professor":"Docente"},"respostaIds":[11,12],
+        "formulario":{"codigo":"disciplinas","nome":"Avaliação das disciplinas","versao":2,"publico":"aluno","escopo":"DISCIPLINA"}}]}}
+    """;
+    var handler = new StubHandler(request => Json(HttpStatusCode.OK, request.Method == HttpMethod.Get ? $"[{body}]" : body));
+    var service = Service(handler);
+    var result = await service.CheckHash(token);
+    Assert(!result.HasFailed && result.Resumo is { HasContext: true, Formulario: null }, "Resumo da jornada não pode ser ocultado por não ter formulário principal.");
+    AssertJourney(result);
+    var history = await service.GetHistory();
+    Assert(history?.Count == 1, "Histórico da jornada incompatível.");
+    AssertJourney(history![0]);
+    Assert(handler.Calls == 2, "Leitura e histórico devem fazer somente uma chamada cada.");
 });
 
 await Check("Comprovante geral e legado sem disciplina continuam aceitos", async () =>
@@ -109,6 +132,7 @@ await Check("Comprovante geral e legado sem disciplina continuam aceitos", async
     var service = Service(new StubHandler(_ => Json(HttpStatusCode.OK, $$$"""{"codigoValidacao":"{{{token}}}","validado":true,"status":"VALIDADO","resumo":{"validacaoId":1,"campanha":null,"formulario":null,"avaliacoes":[]}}""")));
     var result = await service.CheckHash(token);
     Assert(!result.HasFailed && result.Resumo?.Formulario is null, "Código sem vínculo deve continuar compatível.");
+    Assert(result.Resumo is { HasContext: false }, "Comprovante sem contexto deve manter o aviso existente.");
 });
 
 Console.WriteLine($"{passed} testes passaram.");
@@ -123,6 +147,20 @@ async Task Check(string name, Func<Task> test)
 static HttpService Service(StubHandler handler) => new(new HttpClient(handler) { BaseAddress = new Uri("https://api.example.test/api/") });
 static HttpResponseMessage Json(HttpStatusCode status, string body) => new(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
 static void Assert(bool condition, string message) { if (!condition) throw new Exception(message); }
+
+static void AssertJourney(Aplicativo.Resources.Scaffolding.QRCodePayload payload)
+{
+    var resumo = payload.Resumo!;
+    Assert(resumo.ValidacaoId == 42 && resumo.Campanha?.Codigo == "outubro" && resumo.Formulario is null && resumo.HasContext,
+        "Campanha e contexto da jornada incorretos.");
+    Assert(resumo.Avaliacoes.Count == 2, "Participações da jornada foram perdidas.");
+    var geral = resumo.Avaliacoes[0]; var disciplina = resumo.Avaliacoes[1];
+    Assert(geral.Formulario is { Codigo: "geral", Nome: "Avaliação institucional", Versao: 1, Publico: "aluno", Escopo: "GERAL" }
+        && geral.Disciplina is null && geral.RespostaIds.SequenceEqual(new long[] { 8, 9 }), "Avaliação geral incorreta.");
+    Assert(disciplina.Formulario is { Codigo: "disciplinas", Nome: "Avaliação das disciplinas", Versao: 2, Publico: "aluno", Escopo: "DISCIPLINA" }
+        && disciplina.Curso?.Id == 3 && disciplina.Disciplina is { Id: 4, Nome: "Algoritmos", Professor: "Docente" }
+        && disciplina.RespostaIds.SequenceEqual(new long[] { 11, 12 }), "Formulário ou vínculos da disciplina incorretos.");
+}
 
 sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> respond) : HttpMessageHandler
 {

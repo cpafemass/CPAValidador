@@ -31,6 +31,9 @@ public class ResumoValidacao
     public CampanhaValidacao? Campanha { get; set; }
     public FormularioValidacao? Formulario { get; set; }
     public List<AvaliacaoValidacao> Avaliacoes { get; set; } = new();
+
+    [JsonIgnore]
+    public bool HasContext => Campanha is not null || Formulario is not null || Avaliacoes.Count > 0;
 }
 public class CampanhaValidacao
 {
@@ -60,4 +63,6 @@ public class AvaliacaoValidacao
     public CursoValidacao? Curso { get; set; }
     public DisciplinaValidacao? Disciplina { get; set; }
     public List<long> RespostaIds { get; set; } = new();
+    [JsonPropertyName("formulario")]
+    public FormularioValidacao? Formulario { get; set; }
 }
